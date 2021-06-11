@@ -6,6 +6,7 @@
 ips_link="https://www.quic.cloud/ips?ln"
 csf_allow_file="/etc/csf/csf.allow"
 csf_ignore_file="/etc/csf/csf.ignore"
+csf_ignore_bak_file="/etc/csf/csf.ignore.bak"
 exit_flag=0;
 
 
@@ -19,21 +20,17 @@ check_input(){
 
 
 
-echow(){
-    FLAG=${1}
-    shift
-    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
-}
-
-
-
-check_environment(){
+check_update_environment(){
     if [ ! -f "$csf_allow_file" ]; then
         echo "$csf_allow_file is not exists"
         exit_flag=1;
     fi
     if [ ! -f "$csf_ignore_file" ]; then
         echo "$csf_ignore_file is not exists"
+        exit_flag=1;
+    fi
+    if [ ${1} = "-r" ] && [ ! -f "$csf_ignore_bak_file" ] ; then
+        echo "$csf_ignore_bak_file is not exists"
         exit_flag=1;
     fi
 
@@ -50,6 +47,13 @@ check_environment(){
     fi
 }
 
+
+
+echow(){
+    FLAG=${1}
+    shift
+    echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
+}
 
 
 help_message(){
@@ -92,20 +96,21 @@ update_csf_setting(){
 
 
 check_input ${1}
-check_environment
-while [ ! -z "${1}" ]; do
+if [ ! -z "${1}" ]; then
     case ${1} in
         -[hH] | -help | --help)
             help_message
             ;;
         -[uU] | -update | --update)
+            check_update_environment "-u"
             update_csf_setting
             ;;
         -[rR] | -restore | --restor)
+            check_update_environment "-r"
             resotre_csf_setting
             ;;          
         *) 
             help_message
            ;;
     esac
-done
+fi
