@@ -64,6 +64,17 @@ help_message(){
 }
 
 
+
+resotre_csf_setting(){
+    while read line;
+    do
+    csf -ar $line
+    done < <(curl -s $ips_link)
+    cp /etc/csf/csf.ignore.bak /etc/csf/csf.ignore
+}
+
+
+
 update_csf_setting(){
     while read line; 
     do 
@@ -88,15 +99,13 @@ while [ ! -z "${1}" ]; do
             help_message
             ;;
         -[uU] | -update | --update)
-            echo ${1}
+            update_csf_setting
             ;;
         -[rR] | -restore | --restor)
-            echo ${1}
+            resotre_csf_setting
             ;;          
         *) 
             help_message
-            ;;
+           ;;
     esac
-    shift
 done
-exit 1;
