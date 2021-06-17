@@ -1,6 +1,7 @@
 #/usr/bin/env bash
 ips_link='https://www.quic.cloud/ips?ln'
 csf_allow_file='/etc/csf/csf.allow'
+csf_allow_bak_file='/etc/csf/csf.allow.bak'
 csf_ignore_file='/etc/csf/csf.ignore'
 csf_ignore_bak_file='/etc/csf/csf.ignore.bak'
 exit_flag=0
