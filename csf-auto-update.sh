@@ -70,6 +70,7 @@ resotre_csf_setting(){
         csf -ar $line
     done < <(curl -ks $ips_link)
     cp $csf_ignore_bak_file $csf_ignore_file
+    csf -ra
 }
 
 update_csf_setting(){
