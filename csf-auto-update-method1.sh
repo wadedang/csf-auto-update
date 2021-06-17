@@ -76,7 +76,7 @@ resotre_csf_setting(){
 
 update_csf_setting(){
     echo 'Update CSF csf.allow'
-    cp $csf_allow_file $csf_allow_file
+    cp $csf_allow_file $csf_allow_bak_file
     while read line;
     do
         if grep -Fxq $line $csf_allow_file ; then
