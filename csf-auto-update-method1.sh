@@ -5,45 +5,64 @@ csf_allow_bak_file='/etc/csf/csf.allow.bak'
 csf_ignore_file='/etc/csf/csf.ignore'
 csf_ignore_bak_file='/etc/csf/csf.ignore.bak'
 exit_flag=0
+is_csf_allow_bak_file_exists=0
+is_csf_ignore_bak_file_exists=0
 EPACE='        '
 
 check_input(){
-    if [ -z "${1}" ]; then
+    if [ -z "${1}" ]
+    then
         help_message
         exit 1
     fi
 }
 
 check_environment(){
-    if [ ! -f "$csf_allow_file" ]; then
+    if [ ! -f "$csf_allow_file" ]
+    then
         echo "$csf_allow_file does not exists"
         exit_flag=1;
-    fi
-    if [ ! -f "$csf_ignore_file" ]; then
-        echo "$csf_ignore_file does not exists"
-        exit_flag=1;
-    fi
-    if [ ${1} = "-r" ] && [ ! -f "$csf_ignore_bak_file" ] ; then
-        echo "$csf_ignore_bak_file does not exists"
-        exit_flag=1;
+    elif [ ! -f "$csf_allow_bak_file" ]
+    then
+        cp $csf_allow_file $csf_allow_bak_file
     fi
 
-    if [ "$EUID" -ne 0 ]; then
+    if [ ! -f "$csf_ignore_file" ]
+    then
+        echo "$csf_ignore_file does not exists"
+        exit_flag=1;
+    elif [ ! -f "$csf_allow_bak_file" ]
+    then
+        cp $csf_allow_file $csf_allow_bak_file
+    fi
+    
+    # if [ ${1} = "-r" ] && [ ! -f "$csf_ignore_bak_file" ]
+    # then
+    #     echo "$csf_ignore_bak_file does not exists"
+    #     exit_flag=1;
+    # fi
+
+    if [ "$EUID" -ne 0 ]
+    then
         echo "Please run as root user!"
         exit_flag=1;
     fi
 
     curl -m 5 -s https://www.quic.cloud/ips?ln >/dev/null 2>&1
-    if [ ${?} != 0 ]; then 
+    if [ ${?} != 0 ]
+    then 
         echo "${ips_link} not working, please check!"
         exit_flag=1;
     fi
-    if [ $exit_flag = "0" ]; then
+
+    if [ $exit_flag = "0" ]
+    then
         echo "[Success] Environment checked!!"
     else
         echo "[ERROR] Failed Verificaion!!"
         exit 1;
     fi
+
 }
 
 echow(){
@@ -51,7 +70,6 @@ echow(){
     shift
     echo -e "\033[1m${EPACE}${FLAG}\033[0m${@}"
 }
-
 
 help_message(){
     echo -e "\033[1mOPTIONS\033[0m"
@@ -66,36 +84,52 @@ help_message(){
 
 resotre_csf_setting(){
     echo 'Restore csf'
-    while read line;
+    for line in `curl -ks https://quic.cloud/ips?ln`;
     do
         sed -i "/$line/d" $csf_allow_file
-    done < <(curl -ks $ips_link)
-    cp $csf_ignore_bak_file $csf_ignore_file
-    csf -ra
+    done
+
+    for line in `curl -ks https://quic.cloud/ips?ln`;
+    do
+        sed -i "/$line/d" $csf_ignore_file
+    done  
+
+    echo 'Restart csf'
+    csf -ra >/dev/null 2>&1
 }
 
 update_csf_setting(){
     echo 'Update CSF csf.allow'
-    cp $csf_allow_file $csf_allow_bak_file
-    while read line;
+    for line in `curl -ks https://quic.cloud/ips?ln`;
     do
-        if grep -Fxq $line $csf_allow_file ; then
+        if grep -Fxq $line $csf_allow_file
+        then
             echo "$line is in $csf_allow_file"
         else
             echo "Append $line to $csf_allow_file"
             echo $line >> $csf_allow_file
         fi
+    done
 
-    done < <(curl -ks $ips_link)
     echo 'Update CSF csf.ignore'
-    cp $csf_ignore_file $csf_ignore_bak_file
-    curl -ks $ips_link >> $csf_ignore_file
+    for line in `curl -ks https://quic.cloud/ips?ln`;
+    do
+        if grep -Fxq $line $csf_ignore_file
+        then
+            echo "$line is in $csf_ignore_file"
+        else
+            echo "Append $line to $csf_ignore_file"
+            echo $line >> $csf_ignore_file
+        fi
+    done
+
     echo 'Restart csf'
-    csf -ra
+    csf -ra >/dev/null 2>&1
 }
 
 check_input ${1}
-if [ ! -z "${1}" ]; then
+if [ ! -z "${1}" ]
+then
     case ${1} in
         -[hH] | -help | --help)
             help_message
