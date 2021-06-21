@@ -24,6 +24,7 @@ check_environment(){
         exit_flag=1;
     elif [ ! -f "$csf_allow_bak_file" ]
     then
+        echo "Backup $csf_allow_file to $csf_allow_bak_file"
         cp $csf_allow_file $csf_allow_bak_file
     fi
 
@@ -31,9 +32,10 @@ check_environment(){
     then
         echo "$csf_ignore_file does not exists"
         exit_flag=1;
-    elif [ ! -f "$csf_allow_bak_file" ]
+    elif [ ! -f "$csf_ignore_bak_file" ]
     then
-        cp $csf_allow_file $csf_allow_bak_file
+        echo "Backup $csf_ignore_file to $csf_ignore_bak_file"
+        cp $csf_ignore_file $csf_ignore_bak_file
     fi
     
     # if [ ${1} = "-r" ] && [ ! -f "$csf_ignore_bak_file" ]
@@ -102,24 +104,24 @@ update_csf_setting(){
     echo 'Update CSF csf.allow'
     for line in `curl -ks https://quic.cloud/ips?ln`;
     do
-        if grep -Fxq $line $csf_allow_file
+        if grep -q $line $csf_allow_file
         then
             echo "$line is in $csf_allow_file"
         else
             echo "Append $line to $csf_allow_file"
-            echo $line >> $csf_allow_file
+            echo "$line  # Quic.cloud whitelist IPs" >> $csf_allow_file
         fi
     done
 
     echo 'Update CSF csf.ignore'
     for line in `curl -ks https://quic.cloud/ips?ln`;
     do
-        if grep -Fxq $line $csf_ignore_file
+        if grep -q $line $csf_ignore_file
         then
             echo "$line is in $csf_ignore_file"
         else
             echo "Append $line to $csf_ignore_file"
-            echo $line >> $csf_ignore_file
+            echo "$line  # Quic.cloud whitelist IPs" >> $csf_ignore_file
         fi
     done
 
