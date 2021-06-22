@@ -5,6 +5,7 @@ csf_allow_bak_file='/etc/csf/csf.allow.bak'
 csf_ignore_file='/etc/csf/csf.ignore'
 csf_ignore_bak_file='/etc/csf/csf.ignore.bak'
 exit_flag=0
+csf_reload=0
 is_csf_allow_bak_file_exists=0
 is_csf_ignore_bak_file_exists=0
 EPACE='        '
@@ -110,6 +111,7 @@ update_csf_setting(){
         else
             echo "Append $line to $csf_allow_file"
             echo "$line  # Quic.cloud whitelist IPs" >> $csf_allow_file
+            csf_reload=1
         fi
     done
 
@@ -122,11 +124,16 @@ update_csf_setting(){
         else
             echo "Append $line to $csf_ignore_file"
             echo "$line  # Quic.cloud whitelist IPs" >> $csf_ignore_file
+            csf_reload=1
         fi
     done
 
-    echo 'Restart csf'
-    csf -ra >/dev/null 2>&1
+    if [ $csf_reload = 1 ]
+    then
+        echo 'Restart csf'
+        csf -ra >/dev/null 2>&1
+    fi
+
 }
 
 check_input ${1}
